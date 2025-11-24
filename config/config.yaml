@@ -61,7 +61,7 @@ notification:
 
     # ✅ 重点看这里：邮件配置
     email_from: "hypepsi@gmail.com"           # 发件人：你的 Gmail
-    email_password: "${MAIL_PASSWORD}"        # 密码：自动读 Secret，不要动
+    email_password: "${EMAIL_PASSWORD}"        # 密码：自动读 Secret，不要动
     email_to: "hypepsi@gmail.com"             # 收件人：发给自己
     email_smtp_server: "smtp.gmail.com"       # Gmail 服务器
     email_smtp_port: "465"                    # Gmail SSL 端口
