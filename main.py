@@ -86,6 +86,10 @@ def load_config():
             os.environ.get("MAX_NEWS_PER_KEYWORD", "").strip() or "0"
         )
         or config_data["report"].get("max_news_per_keyword", 0),
+        "MIN_RANK_FILTER": int(
+            os.environ.get("MIN_RANK_FILTER", "").strip() or "0"
+        )
+        or config_data["report"].get("min_rank_filter", 0),
         "USE_PROXY": config_data["crawler"]["use_proxy"],
         "DEFAULT_PROXY": config_data["crawler"]["default_proxy"],
         "ENABLE_CRAWLER": os.environ.get("ENABLE_CRAWLER", "").strip().lower()
@@ -1179,6 +1183,7 @@ def count_word_frequency(
     rank_threshold: int = CONFIG["RANK_THRESHOLD"],
     new_titles: Optional[Dict] = None,
     mode: str = "daily",
+    min_rank_filter: int = CONFIG.get("MIN_RANK_FILTER", 0),
 ) -> Tuple[List[Dict], int]:
     """统计词频，支持必须词、频率词、过滤词，并标记新增标题"""
 
@@ -1360,6 +1365,12 @@ def count_word_frequency(
 
                 if not ranks:
                     ranks = [99]
+
+                # 排名过滤：只显示排名在 min_rank_filter 以内的新闻（更精品）
+                if min_rank_filter > 0:
+                    min_rank = min(ranks) if ranks else 99
+                    if min_rank > min_rank_filter:
+                        continue  # 跳过排名太低的新闻
 
                 time_display = format_time_display(first_time, last_time)
 
@@ -1819,29 +1830,49 @@ def render_html_content(
         <style>
             * { box-sizing: border-box; }
             body { 
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
                 margin: 0; 
-                padding: 16px; 
-                background: #fafafa;
-                color: #333;
-                line-height: 1.5;
+                padding: 20px 16px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background-attachment: fixed;
+                color: #1a1a1a;
+                line-height: 1.6;
+                min-height: 100vh;
             }
             
             .container {
-                max-width: 600px;
+                max-width: 680px;
                 margin: 0 auto;
-                background: white;
-                border-radius: 12px;
+                background: #ffffff;
+                border-radius: 20px;
                 overflow: hidden;
-                box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1);
+                backdrop-filter: blur(10px);
             }
             
             .header {
-                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-                padding: 32px 24px;
+                padding: 40px 28px;
                 text-align: center;
                 position: relative;
+                overflow: hidden;
+            }
+            
+            .header::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                animation: pulse 8s ease-in-out infinite;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 0.5; }
+                50% { transform: scale(1.1); opacity: 0.8; }
             }
             
             .save-buttons {
@@ -1916,7 +1947,17 @@ def render_html_content(
             }
             
             .word-group {
-                margin-bottom: 40px;
+                margin-bottom: 32px;
+                background: #fafbfc;
+                border-radius: 16px;
+                padding: 20px;
+                border: 1px solid #e5e7eb;
+                transition: all 0.3s ease;
+            }
+            
+            .word-group:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                transform: translateY(-2px);
             }
             
             .word-group:first-child {
@@ -1927,9 +1968,9 @@ def render_html_content(
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 20px;
-                padding-bottom: 8px;
-                border-bottom: 1px solid #f0f0f0;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #e5e7eb;
             }
             
             .word-info {
@@ -1939,19 +1980,31 @@ def render_html_content(
             }
             
             .word-name {
-                font-size: 17px;
-                font-weight: 600;
+                font-size: 18px;
+                font-weight: 700;
                 color: #1a1a1a;
+                letter-spacing: -0.3px;
             }
             
             .word-count {
-                color: #666;
+                color: #6b7280;
                 font-size: 13px;
-                font-weight: 500;
+                font-weight: 600;
+                background: #f3f4f6;
+                padding: 4px 10px;
+                border-radius: 12px;
             }
             
-            .word-count.hot { color: #dc2626; font-weight: 600; }
-            .word-count.warm { color: #ea580c; font-weight: 600; }
+            .word-count.hot { 
+                color: #dc2626; 
+                background: #fee2e2;
+                font-weight: 700; 
+            }
+            .word-count.warm { 
+                color: #ea580c; 
+                background: #fed7aa;
+                font-weight: 700; 
+            }
             
             .word-index {
                 color: #999;
@@ -1959,113 +2012,148 @@ def render_html_content(
             }
             
             .news-item {
-                margin-bottom: 20px;
-                padding: 16px 0;
-                border-bottom: 1px solid #f5f5f5;
+                margin-bottom: 16px;
+                padding: 18px;
+                background: white;
+                border-radius: 12px;
+                border: 1px solid #e5e7eb;
                 position: relative;
                 display: flex;
-                gap: 12px;
-                align-items: center;
+                gap: 14px;
+                align-items: flex-start;
+                transition: all 0.2s ease;
+            }
+            
+            .news-item:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                border-color: #d1d5db;
+                transform: translateX(4px);
             }
             
             .news-item:last-child {
-                border-bottom: none;
+                margin-bottom: 0;
+            }
+            
+            .news-item.new {
+                border-left: 3px solid #fbbf24;
+                background: linear-gradient(to right, #fffbeb 0%, #ffffff 10%);
             }
             
             .news-item.new::after {
                 content: "NEW";
                 position: absolute;
                 top: 12px;
-                right: 0;
-                background: #fbbf24;
+                right: 12px;
+                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
                 color: #92400e;
-                font-size: 9px;
+                font-size: 10px;
                 font-weight: 700;
-                padding: 3px 6px;
-                border-radius: 4px;
+                padding: 4px 8px;
+                border-radius: 6px;
                 letter-spacing: 0.5px;
+                box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
             }
             
             .news-number {
-                color: #999;
-                font-size: 13px;
-                font-weight: 600;
-                min-width: 20px;
+                color: #6b7280;
+                font-size: 14px;
+                font-weight: 700;
+                min-width: 28px;
                 text-align: center;
                 flex-shrink: 0;
-                background: #f8f9fa;
-                border-radius: 50%;
-                width: 24px;
-                height: 24px;
+                background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                border-radius: 8px;
+                width: 32px;
+                height: 32px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 align-self: flex-start;
-                margin-top: 8px;
+                margin-top: 2px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             }
             
             .news-content {
                 flex: 1;
                 min-width: 0;
-                padding-right: 40px;
+                padding-right: 50px;
             }
             
             .news-item.new .news-content {
-                padding-right: 50px;
+                padding-right: 60px;
             }
             
             .news-header {
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                margin-bottom: 8px;
+                gap: 10px;
+                margin-bottom: 10px;
                 flex-wrap: wrap;
             }
             
             .source-name {
-                color: #666;
+                color: #6b7280;
                 font-size: 12px;
-                font-weight: 500;
+                font-weight: 600;
+                background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                padding: 4px 10px;
+                border-radius: 8px;
+                border: 1px solid #d1d5db;
+                letter-spacing: 0.3px;
             }
             
             .rank-num {
                 color: #fff;
-                background: #6b7280;
-                font-size: 10px;
+                background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+                font-size: 11px;
                 font-weight: 700;
-                padding: 2px 6px;
-                border-radius: 10px;
-                min-width: 18px;
+                padding: 3px 8px;
+                border-radius: 8px;
+                min-width: 20px;
                 text-align: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
             
-            .rank-num.top { background: #dc2626; }
-            .rank-num.high { background: #ea580c; }
+            .rank-num.top { 
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+            }
+            .rank-num.high { 
+                background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+                box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);
+            }
             
             .time-info {
-                color: #999;
+                color: #9ca3af;
                 font-size: 11px;
+                font-weight: 500;
             }
             
             .count-info {
                 color: #059669;
                 font-size: 11px;
-                font-weight: 500;
+                font-weight: 600;
+                background: #d1fae5;
+                padding: 2px 6px;
+                border-radius: 6px;
             }
             
             .news-title {
-                font-size: 15px;
-                line-height: 1.4;
+                font-size: 16px;
+                line-height: 1.5;
                 color: #1a1a1a;
                 margin: 0;
+                font-weight: 500;
             }
             
             .news-link {
                 color: #2563eb;
                 text-decoration: none;
+                transition: color 0.2s ease;
             }
             
             .news-link:hover {
+                color: #1d4ed8;
                 text-decoration: underline;
             }
             
@@ -4571,6 +4659,7 @@ class NewsAnalyzer:
             self.rank_threshold,
             new_titles,
             mode=mode,
+            min_rank_filter=CONFIG.get("MIN_RANK_FILTER", 0),
         )
 
         # HTML生成
