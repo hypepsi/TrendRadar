@@ -111,3 +111,60 @@ ai
 宇宙
 飞船
 航空
+
+# === 中国海外关系、领导人相关 ===
+China
+Chinese
+Xi Jinping
+习近平
++China
++Chinese
++leader
++diplomacy
++foreign relations
++overseas
+Japan
+中日
+China-Japan
+Sino-Japanese
++China
++Japan
++relations
++diplomacy
+Kishida
+岸田
+South Korea
+韩国
+China-South Korea
++China
++Korea
++relations
+
+# === 科技、AI相关 ===
+AI
+artificial intelligence
+machine learning
+deep learning
+GPT
+LLM
+large language model
+ChatGPT
+Claude
+Gemini
++technology
++tech
++innovation
++startup
+
+# === 比特币、加密货币相关 ===
+Bitcoin
+BTC
+cryptocurrency
+crypto
+blockchain
+Ethereum
+ETH
++bitcoin
++crypto
++blockchain
++digital currency

@@ -468,7 +468,7 @@ class DataFetcher:
         self.translator = GoogleTranslator(source='auto', target='zh-CN')
 
     def fetch_rss(self, rss_url: str) -> str:
-        """获取并解析RSS，同时翻译标题"""
+        """获取并解析RSS，同时翻译标题和摘要"""
         try:
             print(f"正在获取RSS: {rss_url}")
             # 如果设置了代理，feedparser不直接支持proxy参数，可能需要设置环境变量
@@ -490,8 +490,19 @@ class DataFetcher:
                 
                 if not title:
                     continue
-                    
+                
+                # 获取摘要（summary或description）
+                summary = entry.get('summary', '') or entry.get('description', '')
+                # 清理HTML标签
+                if summary:
+                    summary = re.sub(r'<[^>]+>', '', summary)
+                    # 限制摘要长度，避免翻译过慢
+                    if len(summary) > 500:
+                        summary = summary[:497] + "..."
+                
                 # 翻译标题
+                final_title = title
+                translated_summary = ""
                 try:
                     # 简单过滤
                     if len(title) > 2:
@@ -503,10 +514,19 @@ class DataFetcher:
                         else:
                             short_title = title
                         final_title = f"{translated_title} ({short_title})"
-                    else:
-                        final_title = title
+                    
+                    # 翻译摘要
+                    if summary and len(summary) > 10:
+                        try:
+                            translated_summary = self.translator.translate(summary)
+                            # 如果摘要翻译成功，添加到标题后面
+                            if translated_summary:
+                                final_title = f"{final_title}\n\n📝 摘要：{translated_summary}"
+                        except Exception as e:
+                            print(f"摘要翻译失败: {e}")
+                            # 摘要翻译失败不影响标题
                 except Exception as e:
-                    print(f"翻译失败: {e}")
+                    print(f"标题翻译失败: {e}")
                     final_title = title
                 
                 items.append({

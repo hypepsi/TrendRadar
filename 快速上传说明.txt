@@ -1,0 +1,63 @@
+========================================
+GitHub 快速上传说明
+========================================
+
+由于系统可能没有安装 Git 或 Git 不在 PATH 中，请按以下步骤操作：
+
+【方法一：使用 Git 命令行】
+
+1. 安装 Git（如果还没安装）
+   - 下载：https://git-scm.com/download/win
+   - 安装后重启命令行
+
+2. 打开 PowerShell 或 CMD，进入项目目录：
+   cd "C:\Users\hypep\OneDrive\Desktop\Cursor\TrendRadar-1"
+
+3. 初始化 Git（如果是新项目）：
+   git init
+   git add .
+   git commit -m "更新：添加中英文新闻源和翻译功能"
+
+4. 添加远程仓库（替换为你的信息）：
+   git remote add origin https://github.com/你的用户名/仓库名.git
+   git branch -M main
+   git push -u origin main
+
+【方法二：使用 GitHub Desktop】
+
+1. 下载安装 GitHub Desktop：
+   https://desktop.github.com/
+
+2. 打开 GitHub Desktop
+   - File → Add Local Repository
+   - 选择项目目录
+   - 填写提交信息
+   - 点击 Commit
+   - 点击 Publish repository（如果是新仓库）
+     或点击 Push origin（如果已有仓库）
+
+【方法三：使用 VS Code】
+
+1. 在 VS Code 中打开项目
+2. 点击左侧源代码管理图标
+3. 点击"初始化仓库"（如果是新项目）
+4. 输入提交信息，点击提交
+5. 点击"发布到 GitHub"或"推送到远程"
+
+【配置 GitHub Pages】
+
+上传完成后：
+1. 进入 GitHub 仓库页面
+2. Settings → Pages
+3. Source 选择 "Deploy from a branch"
+4. Branch 选择 "main"，Folder 选择 "/ (root)"
+5. 点击 Save
+
+【配置 GitHub Actions】
+
+1. Settings → Secrets and variables → Actions
+2. 添加需要的 Secrets（如 FEISHU_WEBHOOK_URL 等）
+3. Actions → Hot News Crawler → Run workflow
+
+详细说明请查看：GITHUB_UPLOAD_GUIDE.md
+
