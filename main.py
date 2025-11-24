@@ -18,6 +18,8 @@ from typing import Dict, List, Tuple, Optional, Union
 import pytz
 import requests
 import yaml
+import feedparser
+from deep_translator import GoogleTranslator
 
 
 VERSION = "3.3.0"
@@ -463,6 +465,65 @@ class DataFetcher:
 
     def __init__(self, proxy_url: Optional[str] = None):
         self.proxy_url = proxy_url
+        self.translator = GoogleTranslator(source='auto', target='zh-CN')
+
+    def fetch_rss(self, rss_url: str) -> str:
+        """获取并解析RSS，同时翻译标题"""
+        try:
+            print(f"正在获取RSS: {rss_url}")
+            # 如果设置了代理，feedparser不直接支持proxy参数，可能需要设置环境变量
+            if self.proxy_url:
+                os.environ['HTTP_PROXY'] = self.proxy_url
+                os.environ['HTTPS_PROXY'] = self.proxy_url
+
+            feed = feedparser.parse(rss_url)
+            items = []
+            
+            # 限制数量，避免翻译过慢，取前30条
+            entries = feed.entries[:30] 
+            
+            print(f"RSS解析成功，共 {len(entries)} 条新闻，开始翻译...")
+            
+            for entry in entries:
+                title = entry.get('title', '')
+                link = entry.get('link', '')
+                
+                if not title:
+                    continue
+                    
+                # 翻译标题
+                try:
+                    # 简单过滤
+                    if len(title) > 2:
+                        translated_title = self.translator.translate(title)
+                        # 格式: 中文标题 (Original Title)
+                        # 限制原文长度，避免太长
+                        if len(title) > 50:
+                            short_title = title[:47] + "..."
+                        else:
+                            short_title = title
+                        final_title = f"{translated_title} ({short_title})"
+                    else:
+                        final_title = title
+                except Exception as e:
+                    print(f"翻译失败: {e}")
+                    final_title = title
+                
+                items.append({
+                    "title": final_title,
+                    "url": link,
+                    "mobileUrl": link
+                })
+            
+            result = {
+                "status": "success",
+                "items": items
+            }
+            return json.dumps(result, ensure_ascii=False)
+            
+        except Exception as e:
+            print(f"RSS处理失败: {e}")
+            return None
 
     def fetch_data(
         self,
@@ -477,6 +538,18 @@ class DataFetcher:
         else:
             id_value = id_info
             alias = id_value
+
+        # === RSS 处理逻辑 ===
+        if id_value.startswith("rss:"):
+            rss_url = id_value[4:]
+            rss_data = self.fetch_rss(rss_url)
+            if rss_data:
+                print(f"获取 RSS {alias} 成功")
+                return rss_data, id_value, alias
+            else:
+                print(f"获取 RSS {alias} 失败")
+                return None, id_value, alias
+        # ==================
 
         url = f"https://newsnow.busiyi.world/api/s?id={id_value}&latest"
 
