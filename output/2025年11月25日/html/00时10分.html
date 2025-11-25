@@ -1,0 +1,1389 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>热点新闻分析</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <style>
+            * { box-sizing: border-box; }
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+                margin: 0; 
+                padding: 20px 16px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background-attachment: fixed;
+                color: #1a1a1a;
+                line-height: 1.6;
+                min-height: 100vh;
+            }
+            
+            .container {
+                max-width: 680px;
+                margin: 0 auto;
+                background: #ffffff;
+                border-radius: 20px;
+                overflow: hidden;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1);
+                backdrop-filter: blur(10px);
+            }
+            
+            .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px 28px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .header::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                animation: pulse 8s ease-in-out infinite;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 0.5; }
+                50% { transform: scale(1.1); opacity: 0.8; }
+            }
+            
+            .save-buttons {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                display: flex;
+                gap: 8px;
+            }
+            
+            .save-btn {
+                background: rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                backdrop-filter: blur(10px);
+                white-space: nowrap;
+            }
+            
+            .save-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+                border-color: rgba(255, 255, 255, 0.5);
+                transform: translateY(-1px);
+            }
+            
+            .save-btn:active {
+                transform: translateY(0);
+            }
+            
+            .save-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+            
+            .header-title {
+                font-size: 22px;
+                font-weight: 700;
+                margin: 0 0 20px 0;
+            }
+            
+            .header-info {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                font-size: 14px;
+                opacity: 0.95;
+            }
+            
+            .info-item {
+                text-align: center;
+            }
+            
+            .info-label {
+                display: block;
+                font-size: 12px;
+                opacity: 0.8;
+                margin-bottom: 4px;
+            }
+            
+            .info-value {
+                font-weight: 600;
+                font-size: 16px;
+            }
+            
+            .content {
+                padding: 24px;
+            }
+            
+            .word-group {
+                margin-bottom: 32px;
+                background: #fafbfc;
+                border-radius: 16px;
+                padding: 20px;
+                border: 1px solid #e5e7eb;
+                transition: all 0.3s ease;
+            }
+            
+            .word-group:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                transform: translateY(-2px);
+            }
+            
+            .word-group:first-child {
+                margin-top: 0;
+            }
+            
+            .word-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #e5e7eb;
+            }
+            
+            .word-info {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            
+            .word-name {
+                font-size: 18px;
+                font-weight: 700;
+                color: #1a1a1a;
+                letter-spacing: -0.3px;
+            }
+            
+            .word-count {
+                color: #6b7280;
+                font-size: 13px;
+                font-weight: 600;
+                background: #f3f4f6;
+                padding: 4px 10px;
+                border-radius: 12px;
+            }
+            
+            .word-count.hot { 
+                color: #dc2626; 
+                background: #fee2e2;
+                font-weight: 700; 
+            }
+            .word-count.warm { 
+                color: #ea580c; 
+                background: #fed7aa;
+                font-weight: 700; 
+            }
+            
+            .word-index {
+                color: #999;
+                font-size: 12px;
+            }
+            
+            .news-item {
+                margin-bottom: 16px;
+                padding: 18px;
+                background: white;
+                border-radius: 12px;
+                border: 1px solid #e5e7eb;
+                position: relative;
+                display: flex;
+                gap: 14px;
+                align-items: flex-start;
+                transition: all 0.2s ease;
+            }
+            
+            .news-item:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                border-color: #d1d5db;
+                transform: translateX(4px);
+            }
+            
+            .news-item:last-child {
+                margin-bottom: 0;
+            }
+            
+            .news-item.new {
+                border-left: 3px solid #fbbf24;
+                background: linear-gradient(to right, #fffbeb 0%, #ffffff 10%);
+            }
+            
+            .news-item.new::after {
+                content: "NEW";
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                color: #92400e;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 4px 8px;
+                border-radius: 6px;
+                letter-spacing: 0.5px;
+                box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+            }
+            
+            .news-number {
+                color: #6b7280;
+                font-size: 14px;
+                font-weight: 700;
+                min-width: 28px;
+                text-align: center;
+                flex-shrink: 0;
+                background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                border-radius: 8px;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                align-self: flex-start;
+                margin-top: 2px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            
+            .news-content {
+                flex: 1;
+                min-width: 0;
+                padding-right: 50px;
+            }
+            
+            .news-item.new .news-content {
+                padding-right: 60px;
+            }
+            
+            .news-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+            }
+            
+            .source-name {
+                color: #6b7280;
+                font-size: 12px;
+                font-weight: 600;
+                background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                padding: 4px 10px;
+                border-radius: 8px;
+                border: 1px solid #d1d5db;
+                letter-spacing: 0.3px;
+            }
+            
+            .rank-num {
+                color: #fff;
+                background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+                font-size: 11px;
+                font-weight: 700;
+                padding: 3px 8px;
+                border-radius: 8px;
+                min-width: 20px;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .rank-num.top { 
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+            }
+            .rank-num.high { 
+                background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+                box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);
+            }
+            
+            .time-info {
+                color: #9ca3af;
+                font-size: 11px;
+                font-weight: 500;
+            }
+            
+            .count-info {
+                color: #059669;
+                font-size: 11px;
+                font-weight: 600;
+                background: #d1fae5;
+                padding: 2px 6px;
+                border-radius: 6px;
+            }
+            
+            .news-title {
+                font-size: 16px;
+                line-height: 1.5;
+                color: #1a1a1a;
+                margin: 0;
+                font-weight: 500;
+            }
+            
+            .news-link {
+                color: #2563eb;
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }
+            
+            .news-link:hover {
+                color: #1d4ed8;
+                text-decoration: underline;
+            }
+            
+            .news-link:visited {
+                color: #7c3aed;
+            }
+            
+            .new-section {
+                margin-top: 40px;
+                padding-top: 24px;
+                border-top: 2px solid #f0f0f0;
+            }
+            
+            .new-section-title {
+                color: #1a1a1a;
+                font-size: 16px;
+                font-weight: 600;
+                margin: 0 0 20px 0;
+            }
+            
+            .new-source-group {
+                margin-bottom: 24px;
+            }
+            
+            .new-source-title {
+                color: #666;
+                font-size: 13px;
+                font-weight: 500;
+                margin: 0 0 12px 0;
+                padding-bottom: 6px;
+                border-bottom: 1px solid #f5f5f5;
+            }
+            
+            .new-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 8px 0;
+                border-bottom: 1px solid #f9f9f9;
+            }
+            
+            .new-item:last-child {
+                border-bottom: none;
+            }
+            
+            .new-item-number {
+                color: #999;
+                font-size: 12px;
+                font-weight: 600;
+                min-width: 18px;
+                text-align: center;
+                flex-shrink: 0;
+                background: #f8f9fa;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .new-item-rank {
+                color: #fff;
+                background: #6b7280;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 3px 6px;
+                border-radius: 8px;
+                min-width: 20px;
+                text-align: center;
+                flex-shrink: 0;
+            }
+            
+            .new-item-rank.top { background: #dc2626; }
+            .new-item-rank.high { background: #ea580c; }
+            
+            .new-item-content {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .new-item-title {
+                font-size: 14px;
+                line-height: 1.4;
+                color: #1a1a1a;
+                margin: 0;
+            }
+            
+            .error-section {
+                background: #fef2f2;
+                border: 1px solid #fecaca;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 24px;
+            }
+            
+            .error-title {
+                color: #dc2626;
+                font-size: 14px;
+                font-weight: 600;
+                margin: 0 0 8px 0;
+            }
+            
+            .error-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .error-item {
+                color: #991b1b;
+                font-size: 13px;
+                padding: 2px 0;
+                font-family: 'SF Mono', Consolas, monospace;
+            }
+            
+            .footer {
+                margin-top: 32px;
+                padding: 20px 24px;
+                background: #f8f9fa;
+                border-top: 1px solid #e5e7eb;
+                text-align: center;
+            }
+            
+            .footer-content {
+                font-size: 13px;
+                color: #6b7280;
+                line-height: 1.6;
+            }
+            
+            .footer-link {
+                color: #4f46e5;
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.2s ease;
+            }
+            
+            .footer-link:hover {
+                color: #7c3aed;
+                text-decoration: underline;
+            }
+            
+            .project-name {
+                font-weight: 600;
+                color: #374151;
+            }
+            
+            @media (max-width: 480px) {
+                body { padding: 12px; }
+                .header { padding: 24px 20px; }
+                .content { padding: 20px; }
+                .footer { padding: 16px 20px; }
+                .header-info { grid-template-columns: 1fr; gap: 12px; }
+                .news-header { gap: 6px; }
+                .news-content { padding-right: 45px; }
+                .news-item { gap: 8px; }
+                .new-item { gap: 8px; }
+                .news-number { width: 20px; height: 20px; font-size: 12px; }
+                .save-buttons {
+                    position: static;
+                    margin-bottom: 16px;
+                    display: flex;
+                    gap: 8px;
+                    justify-content: center;
+                    flex-direction: column;
+                    width: 100%;
+                }
+                .save-btn {
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="save-buttons">
+                    <button class="save-btn" onclick="saveAsImage()">保存为图片</button>
+                    <button class="save-btn" onclick="saveAsMultipleImages()">分段保存</button>
+                </div>
+                <div class="header-title">热点新闻分析</div>
+                <div class="header-info">
+                    <div class="info-item">
+                        <span class="info-label">报告类型</span>
+                        <span class="info-value">实时分析</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">新闻总数</span>
+                        <span class="info-value">510 条</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">热点新闻</span>
+                        <span class="info-value">33 条</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">生成时间</span>
+                        <span class="info-value">11-25 00:10</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">ai 人工智能</div>
+                            <div class="word-count hot">60 条</div>
+                        </div>
+                        <div class="word-index">1/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">纽约时报</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.nytimes.com/2025/11/24/world/europe/ukraine-zelensky-rubio-russia-peace-plan.html" target="_blank" class="news-link">美国和乌克兰欢呼结束与俄罗斯战争的和平计划取得进展 (U.S. and Ukraine Hail Progress on Peace Plan to...)
+
+📝 摘要：华盛顿和基辅表示，有关结束与俄罗斯战争的提议的“富有成效”的讨论将继续进行。但细节仍不清楚。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">2</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">CNBC中国</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.cnbc.com/2025/11/24/ukraine-desperate-to-keep-trump-sweet-while-saving-its-sovereignty.html" target="_blank" class="news-link">乌克兰迫切希望在和平谈判中让特朗普站在自己一边，同时挽救其主权 (Ukraine desperate to keep Trump on its side in ...)
+
+📝 摘要：在俄罗斯和白宫秘密制定和平计划的消息曝光后，美国和乌克兰官员于本周末举行了会谈。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">3</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">NPR新闻</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.npr.org/2025/11/24/g-s1-99036/up-first-newsletter-ukraine-russia-marjorie-taylor-greene-israel-hamas" target="_blank" class="news-link">特朗普的乌克兰和平计划。而且，为什么马乔里·泰勒·格林要辞职 (Trump&#x27;s peace plan for Ukraine. And, why Marjor...)
+
+📝 摘要：欧洲领导人对特朗普总统的乌克兰和平计划持怀疑态度。是什么导致马乔里·泰勒·格林宣布她将于明年辞去国会职务。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">4</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">AI News</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.artificialintelligence-news.com/news/enterprises-are-rethinking-ai-infrastructure-as-inference-costs-rise/" target="_blank" class="news-link">随着推理成本上升，亚太地区企业将人工智能基础设施转移到边缘 (APAC enterprises move AI infrastructure to edge...)
+
+📝 摘要：亚太地区的人工智能支出持续增长，但许多公司仍难以从人工智能项目中获得价值。这很大程度上取决于支持人工智能的基础设施，因为大多数系统并不是为了以实际应用程序所需的速度或规模运行推理而构建的。行业研究表明许多项目都错过了[&amp;#8230;]
+随着推理成本上升，亚太地区企业将人工智能基础设施转移到边缘的情况首先出现在人工智能新闻上。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">5</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">TechCrunch</span><span class="rank-num top">2</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://techcrunch.com/2025/11/24/former-mrbeast-content-strategist-is-building-an-ai-tool-for-creator-ideation-and-analytics/" target="_blank" class="news-link">前 MrBeast 内容策略师正在构建一款用于创作者构思和分析的人工智能工具 (Former MrBeast content strategist is building a...)
+
+📝 摘要：Palo 是短视频创作者深入了解什么对他们有用的工具。</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">美国 日本 韩国</div>
+                            <div class="word-count hot">56 条</div>
+                        </div>
+                        <div class="word-index">2/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">凤凰网</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://news.ifeng.com/c/8oXl5HK6C9j" target="_blank" class="news-link">中方回应日本部署中程导弹</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">2</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">抖音</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.douyin.com/hot/2316851" target="_blank" class="news-link">习近平同美国总统特朗普通电话</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">3</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">百度热搜</span><span class="rank-num top">2</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.baidu.com/s?wd=%E7%9F%B3%E7%A0%B4%E8%8C%82%E7%AD%89%E6%97%A5%E6%9C%AC3%E4%BD%8D%E5%89%8D%E9%A6%96%E7%9B%B8%E5%86%8D%E8%A1%A8%E6%80%81" target="_blank" class="news-link">石破茂等日本3位前首相再表态</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">4</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">纽约时报</span><span class="rank-num top">2</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.nytimes.com/2025/11/24/world/americas/russia-disinformation-mexico.html" target="_blank" class="news-link">俄罗斯虚假信息来到墨西哥，试图破坏美国关系 (Russian Disinformation Comes to Mexico, Seeking...)
+
+📝 摘要：美国政府电报称，克里姆林宫经营的媒体加大了在拉丁美洲的影响力，试图让人们反对美国并赢得对俄罗斯的支持。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">5</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">华尔街见闻</span><span class="rank-num top">3</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://wallstreetcn.com/articles/3760029" target="_blank" class="news-link">习近平同美国总统特朗普通电话</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">国产 中国</div>
+                            <div class="word-count hot">31 条</div>
+                        </div>
+                        <div class="word-index">3/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">财联社热门</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.cls.cn/detail/2209119" target="_blank" class="news-link">中国将寻找第二颗地球</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">2</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">微博</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://s.weibo.com/weibo?q=%23%E4%B8%AD%E5%9B%BD%E6%9A%82%E5%81%9C%E7%A7%9F%E5%80%9F%E5%A4%A7%E7%86%8A%E7%8C%AB%E7%BB%99%E6%97%A5%E6%9C%AC%E5%BC%95%E5%85%B3%E6%B3%A8%23&amp;t=31&amp;band_rank=1&amp;Refer=top" target="_blank" class="news-link">中国暂停租借大熊猫给日本引关注</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">3</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">知乎</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.zhihu.com/question/1976258610913891213" target="_blank" class="news-link">12 条中日航线取消全部航班，日本旅游业将面临什么？中国游客对日本旅游业重要性有多大？</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">4</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">BBC亚洲</span><span class="rank-num top">2</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.bbc.com/news/articles/c8676qpxgnqo?at_medium=RSS&amp;at_campaign=rss" target="_blank" class="news-link">日本豪赌将花岛打造成全球芯片中心 (Japan&#x27;s high-stakes gamble to turn island of fl...)
+
+📝 摘要：中国曾在半导体和电子产品领域领先世界，但多年来落后于台湾、韩国和中国。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">5</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">华尔街见闻</span><span class="rank-num ">4</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://wallstreetcn.com/articles/3760014" target="_blank" class="news-link">网上中签率0.02423369%，网下申购倍数近1600倍！&quot;国产GPU第一股&quot;摩尔线程启动申购遭疯抢</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">iphone ipad mac ios</div>
+                            <div class="word-count warm">9 条</div>
+                        </div>
+                        <div class="word-index">4/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">BBC国际</span><span class="rank-num top">3</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.bbc.com/news/articles/ce8g8wrd61zo?at_medium=RSS&amp;at_campaign=rss" target="_blank" class="news-link">马丘比丘因旅游巴士引发争吵 (Machu Picchu hit by a row over tourist buses)
+
+📝 摘要：人们对载游客前往秘鲁世界遗产的巴士发起了抗议。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">2</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">Wired</span><span class="rank-num ">4</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.wired.com/gallery/best-home-arcade-machines/" target="_blank" class="news-link">经过测试和审查的 10 款最佳家庭街机（2025 年） (The 10 Best Home Arcade Machines (2025), Tested...)
+
+📝 摘要：使用经过 WIRED 测试的家用街机重温 70 年代和 80 年代的经典游戏。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">3</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">纽约时报亚太</span><span class="rank-num ">5</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.nytimes.com/2025/11/23/world/asia/titanic-watch-auction.html" target="_blank" class="news-link">泰坦尼克号乘客怀表售价 230 万美元 (Titanic Passenger’s Pocket Watch Sells for $2.3...)
+
+📝 摘要：这块手表的所有者是梅西百货 (Macy’s) 的合伙人伊西多·施特劳斯 (Isidor Straus)，1912 年 4 月泰坦尼克号沉没时，他正与妻子乘坐头等舱。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">4</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">Ars Technica</span><span class="rank-num ">8</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://arstechnica.com/gadgets/2025/11/curiosity-stream-expects-to-make-most-of-its-money-from-ai-deals-by-2027/" target="_blank" class="news-link">以科学为中心的流媒体服务 Curiosity Stream 现在是一家人工智能许可公司 (Science-centric streaming service Curiosity Str...)
+
+📝 摘要：Curiosity Stream 的所有者为人工智能公司提供的内容比为订阅者提供的内容还要多。</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">科技</div>
+                            <div class="word-count warm">8 条</div>
+                        </div>
+                        <div class="word-index">5/17</div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">chatgpt openai sora</div>
+                            <div class="word-count warm">6 条</div>
+                        </div>
+                        <div class="word-index">6/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">The Verge</span><span class="rank-num top">1</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.theverge.com/news/827607/openai-hardware-prototype-chatgpt-jony-ive-sam-altman" target="_blank" class="news-link">Jony Ive 和 Sam Altman 表示他们终于有了人工智能硬件原型 (Jony Ive and Sam Altman say they finally have a...)
+
+📝 摘要：OpenAI 首席执行官 Sam Altman 和前苹果设计师 Jony Ive 一直对第一个神秘 OpenAI 硬件的细节保密，但听起来他们已经确定了设计。在艾默生集团 2025 年演示日上接受劳伦·鲍威尔·乔布斯 (Laurene Powell Jobs) 采访时，他们表示目前正在制作该设备的原型，并且[&amp;#8230;]</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">2</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">财联社热门</span><span class="rank-num top">2</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.cls.cn/detail/2208933" target="_blank" class="news-link">增速超越ChatGPT！千问、灵光持续破圈 国产AI大战2.0打响</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">3</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">AI News</span><span class="rank-num top">2</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.artificialintelligence-news.com/news/4-best-essay-writing-websites-students-choose-over-ai/" target="_blank" class="news-link">学生选择 AI 的 4 个最佳论文写作网站 (4 best essay writing websites students choose o...)
+
+📝 摘要：我们都看过这样的头条新闻：三分之一的美国大学生表示，他们每月至少使用一次 ChatGPT 来完成写作任务。 2023 年至 2024 年间，美国青少年使用同一工具完成学业的比例翻了一番。生成式 AI 工具总体上是十分之七的青少年生活的一部分。 [&amp;#8230;]
+学生选择的 4 个最佳论文写作网站首先出现在 AI News 上。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">4</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">AI News</span><span class="rank-num ">5</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.artificialintelligence-news.com/news/chatgpt-group-chats-may-help-teams-bring-ai-into-daily-planning/" target="_blank" class="news-link">ChatGPT 群聊可以帮助团队将人工智能纳入日常计划 (ChatGPT group chats may help teams bring AI int...)
+
+📝 摘要：OpenAI 在 ChatGPT 中引入了群聊功能，让人们能够与聊天机器人一起与最多 20 人进行共享对话。经过本月早些时候的短暂试点后，该功能现在可供所有登录用户使用，它将 ChatGPT 从主要一对一的工具转变为支持小组协作的工具。 [&amp;#8230;]
+ChatGPT 后的群聊可能会帮助团队将 AI 纳入日常计划，这一消息首先出现在 AI News 上。</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">5</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">Wired</span><span class="rank-num ">10</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.wired.com/story/openai-research-lead-mental-health-quietly-departs/" target="_blank" class="news-link">ChatGPT 心理健康工作背后的一位研究负责人即将离开 OpenAI (A Research Leader Behind ChatGPT’s Mental Healt...)
+
+📝 摘要：模型政策团队领导人工智能安全研究的核心部分，包括ChatGPT如何应对危机中的用户。</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">微软 Microsoft</div>
+                            <div class="word-count warm">5 条</div>
+                        </div>
+                        <div class="word-index">7/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">The Verge</span><span class="rank-num ">6</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.theverge.com/news/827414/microsoft-file-explorer-windows-11-preload-context-menu-declutter" target="_blank" class="news-link">Microsoft 正在加速并整理 Windows 11 中的文件资源管理器 (Microsoft is speeding up and decluttering File ...)
+
+📝 摘要：Microsoft 正在对 Windows 11 中的文件资源管理器进行一些更改，使其不再混乱且启动速度更快。 Windows 11 的最新开发预览版本包括文件资源管理器预加载“以帮助提高文件资源管理器启动性能”，以及对上下文菜单的更改以减少不常用的空间量 [&amp;#8230;]</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">2</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">AI News</span><span class="rank-num ">8</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.artificialintelligence-news.com/news/pure-storage-and-azures-role-in-ai-ready-data-for-enterprise/" target="_blank" class="news-link">Pure Storage 和 Azure 在企业 AI 就绪数据中的作用 (Pure Storage and Azure’s role in AI-ready data ...)
+
+📝 摘要：许多组织正在尝试更新其基础设施，以提高效率并管理不断上升的成本。但道路绝非简单。企业中的混合设置、遗留系统和 AI 的新需求通常会给 IT 团队带来权衡。微软和几家存储和数据平台供应商最近的举措凸显了企业如何努力[&amp;#8230;]
+Pure Storage 和 Azure 在企业 AI 就绪数据中的作用一文首先出现在 AI News 上。</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">英伟达 NVIDIA 黄仁勋</div>
+                            <div class="word-count warm">5 条</div>
+                        </div>
+                        <div class="word-index">8/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">TechCrunch</span><span class="rank-num ">7</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://techcrunch.com/2025/11/24/revolut-hits-75b-valuation-in-new-capital-raise/" target="_blank" class="news-link">Revolut 在新一轮融资中估值达到 75B 美元 (Revolut hits $75B valuation in new capital raise)
+
+📝 摘要：该交易由 Coatue、Greenoaks、Dragoneer 和 Fidelity 牵头。包括 Nvidia 的 NVentures、Andreessen Horowitz、Franklin Templeton 在内的投资者以及 T. Rowe Price Associates 顾问的其他支持者也参与其中。</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">华为 鸿蒙 HarmonyOS 任正非</div>
+                            <div class="word-count ">3 条</div>
+                        </div>
+                        <div class="word-index">9/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">微博</span><span class="rank-num ">5</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://s.weibo.com/weibo?q=%23%E5%8D%8E%E4%B8%BAMate80ProMax%E9%85%8D%E7%BD%AE%E6%9B%9D%E5%85%89%23&amp;t=31&amp;band_rank=5&amp;Refer=top" target="_blank" class="news-link">华为Mate80ProMax配置曝光</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">谷歌 google gemini deepmind</div>
+                            <div class="word-count ">3 条</div>
+                        </div>
+                        <div class="word-index">10/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">The Verge</span><span class="rank-num top">3</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.theverge.com/report/827555/google-gemini-3-is-winning-the-ai-race-for-now" target="_blank" class="news-link">“天哪”：Gemini 3 暂时赢得了人工智能竞赛 (&amp;#8216;Holy shit’: Gemini 3 is winning the AI r...)
+
+📝 摘要：当人工智能模型的发布立即催生出模因和论文，宣称行业的其他部分已经成熟时，你就知道你有一些值得剖析的东西。谷歌的 Gemini 3 于周二发布，引起了广泛的关注。该公司将该模型称为“智能新时代”，并在第一天就首次将其集成到谷歌搜索中。 [&amp;#8230;]</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">芯片 光刻机</div>
+                            <div class="word-count ">3 条</div>
+                        </div>
+                        <div class="word-index">11/17</div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">月球 登月 火星 宇宙 飞船 航空</div>
+                            <div class="word-count ">3 条</div>
+                        </div>
+                        <div class="word-index">12/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">bilibili 热搜</span><span class="rank-num ">7</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://search.bilibili.com/all?keyword=%E7%A5%9E%E4%BA%8C%E5%8D%81%E4%BA%8C%E9%A3%9E%E8%88%B9%E8%AE%A1%E5%88%9225%E6%97%A5%E5%8F%91%E5%B0%84" target="_blank" class="news-link">神二十二飞船计划25日发射</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">特斯拉 马斯克</div>
+                            <div class="word-count ">2 条</div>
+                        </div>
+                        <div class="word-index">13/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">The Verge</span><span class="rank-num ">7</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.theverge.com/news/827390/doge-is-no-more-and-in-its-wake-only-chaos" target="_blank" class="news-link">DOGE已不复存在，随之而来的只有混乱 (DOGE is no more, and in its wake, only chaos)
+
+📝 摘要：今年四月，埃隆·马斯克开始辞去 DOGE 负责人的职务。到了六月，他或多或少已经完全离开了华盛顿。在他去世后，他留下了权力真空和严重的恶意，这显然导致了总督在其章程到期前八个月的解散。打电话给马斯克的[&amp;#8230;]</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">2</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">华尔街见闻</span><span class="rank-num ">10</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://wallstreetcn.com/articles/3759972" target="_blank" class="news-link">马斯克的“悲哀”！报道称：协议还有八个月，但DOGE“已不存在”</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">机器人</div>
+                            <div class="word-count ">2 条</div>
+                        </div>
+                        <div class="word-index">14/17</div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">DeepSeek 梁文锋</div>
+                            <div class="word-count ">1 条</div>
+                        </div>
+                        <div class="word-index">15/17</div>
+                    </div>
+                    <div class="news-item ">
+                        <div class="news-number">1</div>
+                        <div class="news-content">
+                            <div class="news-header">
+                                <span class="source-name">AI News</span><span class="rank-num top">3</span><span class="time-info">00时10分</span>
+                            </div>
+                            <div class="news-title"><a href="https://www.artificialintelligence-news.com/news/alibaba-qwen-ai-app-10-million-downloads/" target="_blank" class="news-link">阿里巴巴颠覆人工智能市场，Qwen AI 下载量突破 1000 万次 (Qwen AI hits 10m+ downloads as Alibaba disrupts...)
+
+📝 摘要：阿里巴巴最近推出的 Qwen AI 应用程序展现了非凡的市场吸引力，自公测版发布以来 7 天内累计下载量超过 1000 万次，这一速度超过了 ChatGPT、Sora 和 DeepSeek 的早期采用率。该应用程序的快速普及反映出科技巨头在人工智能商业化方面的转变。虽然国际化[&amp;#8230;]
+阿里巴巴颠覆人工智能市场，Qwen AI 的下载量突破 1000 万次，该帖子首先出现在 AI News 上。</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">哪吒 饺子 杨宇</div>
+                            <div class="word-count ">1 条</div>
+                        </div>
+                        <div class="word-index">16/17</div>
+                    </div>
+                </div>
+                <div class="word-group">
+                    <div class="word-header">
+                        <div class="word-info">
+                            <div class="word-name">claude Anthropic</div>
+                            <div class="word-count ">1 条</div>
+                        </div>
+                        <div class="word-index">17/17</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <div class="footer-content">
+                    由 <span class="project-name">TrendRadar</span> 生成 · 
+                    <a href="https://github.com/sansan0/TrendRadar" target="_blank" class="footer-link">
+                        GitHub 开源项目
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            async function saveAsImage() {
+                const button = event.target;
+                const originalText = button.textContent;
+                
+                try {
+                    button.textContent = '生成中...';
+                    button.disabled = true;
+                    window.scrollTo(0, 0);
+                    
+                    // 等待页面稳定
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    // 截图前隐藏按钮
+                    const buttons = document.querySelector('.save-buttons');
+                    buttons.style.visibility = 'hidden';
+                    
+                    // 再次等待确保按钮完全隐藏
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const container = document.querySelector('.container');
+                    
+                    const canvas = await html2canvas(container, {
+                        backgroundColor: '#ffffff',
+                        scale: 1.5,
+                        useCORS: true,
+                        allowTaint: false,
+                        imageTimeout: 10000,
+                        removeContainer: false,
+                        foreignObjectRendering: false,
+                        logging: false,
+                        width: container.offsetWidth,
+                        height: container.offsetHeight,
+                        x: 0,
+                        y: 0,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: window.innerWidth,
+                        windowHeight: window.innerHeight
+                    });
+                    
+                    buttons.style.visibility = 'visible';
+                    
+                    const link = document.createElement('a');
+                    const now = new Date();
+                    const filename = `TrendRadar_热点新闻分析_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.png`;
+                    
+                    link.download = filename;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    
+                    // 触发下载
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    button.textContent = '保存成功!';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                    
+                } catch (error) {
+                    const buttons = document.querySelector('.save-buttons');
+                    buttons.style.visibility = 'visible';
+                    button.textContent = '保存失败';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                }
+            }
+            
+            async function saveAsMultipleImages() {
+                const button = event.target;
+                const originalText = button.textContent;
+                const container = document.querySelector('.container');
+                const scale = 1.5; 
+                const maxHeight = 5000 / scale;
+                
+                try {
+                    button.textContent = '分析中...';
+                    button.disabled = true;
+                    
+                    // 获取所有可能的分割元素
+                    const newsItems = Array.from(container.querySelectorAll('.news-item'));
+                    const wordGroups = Array.from(container.querySelectorAll('.word-group'));
+                    const newSection = container.querySelector('.new-section');
+                    const errorSection = container.querySelector('.error-section');
+                    const header = container.querySelector('.header');
+                    const footer = container.querySelector('.footer');
+                    
+                    // 计算元素位置和高度
+                    const containerRect = container.getBoundingClientRect();
+                    const elements = [];
+                    
+                    // 添加header作为必须包含的元素
+                    elements.push({
+                        type: 'header',
+                        element: header,
+                        top: 0,
+                        bottom: header.offsetHeight,
+                        height: header.offsetHeight
+                    });
+                    
+                    // 添加错误信息（如果存在）
+                    if (errorSection) {
+                        const rect = errorSection.getBoundingClientRect();
+                        elements.push({
+                            type: 'error',
+                            element: errorSection,
+                            top: rect.top - containerRect.top,
+                            bottom: rect.bottom - containerRect.top,
+                            height: rect.height
+                        });
+                    }
+                    
+                    // 按word-group分组处理news-item
+                    wordGroups.forEach(group => {
+                        const groupRect = group.getBoundingClientRect();
+                        const groupNewsItems = group.querySelectorAll('.news-item');
+                        
+                        // 添加word-group的header部分
+                        const wordHeader = group.querySelector('.word-header');
+                        if (wordHeader) {
+                            const headerRect = wordHeader.getBoundingClientRect();
+                            elements.push({
+                                type: 'word-header',
+                                element: wordHeader,
+                                parent: group,
+                                top: groupRect.top - containerRect.top,
+                                bottom: headerRect.bottom - containerRect.top,
+                                height: headerRect.height
+                            });
+                        }
+                        
+                        // 添加每个news-item
+                        groupNewsItems.forEach(item => {
+                            const rect = item.getBoundingClientRect();
+                            elements.push({
+                                type: 'news-item',
+                                element: item,
+                                parent: group,
+                                top: rect.top - containerRect.top,
+                                bottom: rect.bottom - containerRect.top,
+                                height: rect.height
+                            });
+                        });
+                    });
+                    
+                    // 添加新增新闻部分
+                    if (newSection) {
+                        const rect = newSection.getBoundingClientRect();
+                        elements.push({
+                            type: 'new-section',
+                            element: newSection,
+                            top: rect.top - containerRect.top,
+                            bottom: rect.bottom - containerRect.top,
+                            height: rect.height
+                        });
+                    }
+                    
+                    // 添加footer
+                    const footerRect = footer.getBoundingClientRect();
+                    elements.push({
+                        type: 'footer',
+                        element: footer,
+                        top: footerRect.top - containerRect.top,
+                        bottom: footerRect.bottom - containerRect.top,
+                        height: footer.offsetHeight
+                    });
+                    
+                    // 计算分割点
+                    const segments = [];
+                    let currentSegment = { start: 0, end: 0, height: 0, includeHeader: true };
+                    let headerHeight = header.offsetHeight;
+                    currentSegment.height = headerHeight;
+                    
+                    for (let i = 1; i < elements.length; i++) {
+                        const element = elements[i];
+                        const potentialHeight = element.bottom - currentSegment.start;
+                        
+                        // 检查是否需要创建新分段
+                        if (potentialHeight > maxHeight && currentSegment.height > headerHeight) {
+                            // 在前一个元素结束处分割
+                            currentSegment.end = elements[i - 1].bottom;
+                            segments.push(currentSegment);
+                            
+                            // 开始新分段
+                            currentSegment = {
+                                start: currentSegment.end,
+                                end: 0,
+                                height: element.bottom - currentSegment.end,
+                                includeHeader: false
+                            };
+                        } else {
+                            currentSegment.height = potentialHeight;
+                            currentSegment.end = element.bottom;
+                        }
+                    }
+                    
+                    // 添加最后一个分段
+                    if (currentSegment.height > 0) {
+                        currentSegment.end = container.offsetHeight;
+                        segments.push(currentSegment);
+                    }
+                    
+                    button.textContent = `生成中 (0/${segments.length})...`;
+                    
+                    // 隐藏保存按钮
+                    const buttons = document.querySelector('.save-buttons');
+                    buttons.style.visibility = 'hidden';
+                    
+                    // 为每个分段生成图片
+                    const images = [];
+                    for (let i = 0; i < segments.length; i++) {
+                        const segment = segments[i];
+                        button.textContent = `生成中 (${i + 1}/${segments.length})...`;
+                        
+                        // 创建临时容器用于截图
+                        const tempContainer = document.createElement('div');
+                        tempContainer.style.cssText = `
+                            position: absolute;
+                            left: -9999px;
+                            top: 0;
+                            width: ${container.offsetWidth}px;
+                            background: white;
+                        `;
+                        tempContainer.className = 'container';
+                        
+                        // 克隆容器内容
+                        const clonedContainer = container.cloneNode(true);
+                        
+                        // 移除克隆内容中的保存按钮
+                        const clonedButtons = clonedContainer.querySelector('.save-buttons');
+                        if (clonedButtons) {
+                            clonedButtons.style.display = 'none';
+                        }
+                        
+                        tempContainer.appendChild(clonedContainer);
+                        document.body.appendChild(tempContainer);
+                        
+                        // 等待DOM更新
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        // 使用html2canvas截取特定区域
+                        const canvas = await html2canvas(clonedContainer, {
+                            backgroundColor: '#ffffff',
+                            scale: scale,
+                            useCORS: true,
+                            allowTaint: false,
+                            imageTimeout: 10000,
+                            logging: false,
+                            width: container.offsetWidth,
+                            height: segment.end - segment.start,
+                            x: 0,
+                            y: segment.start,
+                            windowWidth: window.innerWidth,
+                            windowHeight: window.innerHeight
+                        });
+                        
+                        images.push(canvas.toDataURL('image/png', 1.0));
+                        
+                        // 清理临时容器
+                        document.body.removeChild(tempContainer);
+                    }
+                    
+                    // 恢复按钮显示
+                    buttons.style.visibility = 'visible';
+                    
+                    // 下载所有图片
+                    const now = new Date();
+                    const baseFilename = `TrendRadar_热点新闻分析_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+                    
+                    for (let i = 0; i < images.length; i++) {
+                        const link = document.createElement('a');
+                        link.download = `${baseFilename}_part${i + 1}.png`;
+                        link.href = images[i];
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // 延迟一下避免浏览器阻止多个下载
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    
+                    button.textContent = `已保存 ${segments.length} 张图片!`;
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('分段保存失败:', error);
+                    const buttons = document.querySelector('.save-buttons');
+                    buttons.style.visibility = 'visible';
+                    button.textContent = '保存失败';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                }
+            }
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                window.scrollTo(0, 0);
+            });
+        </script>
+    </body>
+    </html>
+    
