@@ -2367,18 +2367,18 @@ def render_html_content(
         </style>
     </head>
     <body>
-        <div class="container">
-            <div class="header">
+        <div class="container" style="max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;">
+            <div class="header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 28px; text-align: center;">
                 <div class="save-buttons">
                     <button class="save-btn" onclick="saveAsImage()">保存为图片</button>
                     <button class="save-btn" onclick="saveAsMultipleImages()">分段保存</button>
                 </div>
-                <div class="header-title">热点新闻分析</div>
-                <div class="header-subtitle">📊 6小时重要新闻汇总</div>
-                <div class="header-info">
-                    <div class="info-item">
-                        <span class="info-label">报告类型</span>
-                        <span class="info-value">"""
+                <div class="header-title" style="font-size: 24px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.5px;">热点新闻分析</div>
+                <div class="header-subtitle" style="font-size: 13px; opacity: 0.9; margin: 0 0 24px 0; font-weight: 400;">📊 6小时重要新闻汇总</div>
+                <div class="header-info" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; font-size: 13px; opacity: 0.95;">
+                    <div class="info-item" style="text-align: center; background: rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <span class="info-label" style="display: block; font-size: 11px; opacity: 0.85; margin-bottom: 6px; text-transform: uppercase;">报告类型</span>
+                        <span class="info-value" style="font-weight: 700; font-size: 18px;">"""
 
     # 处理报告类型显示
     if is_daily_summary:
@@ -2393,9 +2393,9 @@ def render_html_content(
 
     html += """</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">新闻总数</span>
-                        <span class="info-value">"""
+                    <div class="info-item" style="text-align: center; background: rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <span class="info-label" style="display: block; font-size: 11px; opacity: 0.85; margin-bottom: 6px; text-transform: uppercase;">新闻总数</span>
+                        <span class="info-value" style="font-weight: 700; font-size: 18px;">"""
 
     html += f"{total_titles} 条"
 
@@ -2404,17 +2404,17 @@ def render_html_content(
 
     html += """</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">热点新闻</span>
-                        <span class="info-value">"""
+                    <div class="info-item" style="text-align: center; background: rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <span class="info-label" style="display: block; font-size: 11px; opacity: 0.85; margin-bottom: 6px; text-transform: uppercase;">热点新闻</span>
+                        <span class="info-value" style="font-weight: 700; font-size: 18px;">"""
 
     html += f"{hot_news_count} 条"
 
     html += """</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">生成时间</span>
-                        <span class="info-value">"""
+                    <div class="info-item" style="text-align: center; background: rgba(255, 255, 255, 0.15); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <span class="info-label" style="display: block; font-size: 11px; opacity: 0.85; margin-bottom: 6px; text-transform: uppercase;">生成时间</span>
+                        <span class="info-value" style="font-weight: 700; font-size: 18px;">"""
 
     now = get_beijing_time()
     html += now.strftime("%m-%d %H:%M")
@@ -2424,7 +2424,7 @@ def render_html_content(
                 </div>
             </div>
             
-            <div class="content">"""
+            <div class="content" style="padding: 24px;">"""
 
     # 处理失败ID错误信息
     if report_data["failed_ids"]:
@@ -2456,26 +2456,27 @@ def render_html_content(
             escaped_word = html_escape(stat["word"])
 
             html += f"""
-                <div class="word-group">
-                    <div class="word-header">
-                        <div class="word-info">
-                            <div class="word-name">{escaped_word}</div>
-                            <div class="word-count {count_class}">{count} 条</div>
+                <div class="word-group" style="margin-bottom: 28px; background: #ffffff; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div class="word-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #f3f4f6;">
+                        <div class="word-info" style="display: flex; align-items: center; gap: 14px; flex: 1;">
+                            <div class="word-name" style="font-size: 20px; font-weight: 700; color: #111827; letter-spacing: -0.4px; line-height: 1.2;">{escaped_word}</div>
+                            <div class="word-count {count_class}" style="color: #6b7280; font-size: 13px; font-weight: 700; background: #f3f4f6; padding: 6px 14px; border-radius: 14px; border: 1px solid #d1d5db; white-space: nowrap;">{count} 条</div>
                         </div>
-                        <div class="word-index">{i}/{total_count}</div>
+                        <div class="word-index" style="color: #9ca3af; font-size: 12px; font-weight: 600; background: #f9fafb; padding: 4px 10px; border-radius: 10px; border: 1px solid #e5e7eb;">{i}/{total_count}</div>
                     </div>"""
 
             # 处理每个词组下的新闻标题，给每条新闻标上序号
             for j, title_data in enumerate(stat["titles"], 1):
                 is_new = title_data.get("is_new", False)
                 new_class = "new" if is_new else ""
+                new_style = "border-left: 3px solid #fbbf24; background: #fffbeb;" if is_new else ""
 
                 html += f"""
-                    <div class="news-item {new_class}">
-                        <div class="news-number">{j}</div>
-                        <div class="news-content">
-                            <div class="news-header">
-                                <span class="source-name">{html_escape(title_data["source_name"])}</span>"""
+                    <div class="news-item {new_class}" style="margin-bottom: 14px; padding: 20px; background: #fafbfc; border-radius: 14px; border: 1px solid #e5e7eb; display: flex; gap: 16px; align-items: flex-start; {new_style}">
+                        <div class="news-number" style="color: #6b7280; font-size: 14px; font-weight: 700; min-width: 28px; text-align: center; background: #f3f4f6; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; align-self: flex-start; margin-top: 2px;">{j}</div>
+                        <div class="news-content" style="flex: 1; min-width: 0;">
+                            <div class="news-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                                <span class="source-name" style="color: #6b7280; font-size: 12px; font-weight: 600; background: #f3f4f6; padding: 4px 10px; border-radius: 8px; border: 1px solid #d1d5db;">{html_escape(title_data["source_name"])}</span>"""
 
                 # 处理排名显示
                 ranks = title_data.get("ranks", [])
@@ -2487,17 +2488,20 @@ def render_html_content(
                     # 确定排名等级
                     if min_rank <= 3:
                         rank_class = "top"
+                        rank_style = "background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);"
                     elif min_rank <= rank_threshold:
                         rank_class = "high"
+                        rank_style = "background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);"
                     else:
                         rank_class = ""
+                        rank_style = "background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
 
                     if min_rank == max_rank:
                         rank_text = str(min_rank)
                     else:
                         rank_text = f"{min_rank}-{max_rank}"
 
-                    html += f'<span class="rank-num {rank_class}">{rank_text}</span>'
+                    html += f'<span class="rank-num {rank_class}" style="color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; min-width: 20px; text-align: center; {rank_style}">{rank_text}</span>'
 
                 # 处理时间显示
                 time_display = title_data.get("time_display", "")
@@ -2509,17 +2513,17 @@ def render_html_content(
                         .replace("]", "")
                     )
                     html += (
-                        f'<span class="time-info">{html_escape(simplified_time)}</span>'
+                        f'<span class="time-info" style="color: #9ca3af; font-size: 11px; font-weight: 500;">{html_escape(simplified_time)}</span>'
                     )
 
                 # 处理出现次数
                 count_info = title_data.get("count", 1)
                 if count_info > 1:
-                    html += f'<span class="count-info">{count_info}次</span>'
+                    html += f'<span class="count-info" style="color: #059669; font-size: 11px; font-weight: 600; background: #d1fae5; padding: 2px 6px; border-radius: 6px;">{count_info}次</span>'
 
                 html += """
                             </div>
-                            <div class="news-title">"""
+                            <div class="news-title" style="font-size: 16px; line-height: 1.6; color: #111827; margin: 0; font-weight: 500; letter-spacing: -0.2px;">"""
 
                 # 处理标题和链接
                 escaped_title = html_escape(title_data["title"])
@@ -2527,7 +2531,7 @@ def render_html_content(
 
                 if link_url:
                     escaped_url = html_escape(link_url)
-                    html += f'<a href="{escaped_url}" target="_blank" class="news-link">{escaped_title}</a>'
+                    html += f'<a href="{escaped_url}" target="_blank" class="news-link" style="color: #2563eb; text-decoration: none;">{escaped_title}</a>'
                 else:
                     html += escaped_title
 
