@@ -1913,33 +1913,48 @@ def render_html_content(
             }
             
             .header-title {
-                font-size: 22px;
+                font-size: 24px;
                 font-weight: 700;
-                margin: 0 0 20px 0;
+                margin: 0 0 8px 0;
+                letter-spacing: -0.5px;
+            }
+            
+            .header-subtitle {
+                font-size: 13px;
+                opacity: 0.9;
+                margin: 0 0 24px 0;
+                font-weight: 400;
             }
             
             .header-info {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(2, 1fr);
                 gap: 16px;
-                font-size: 14px;
+                font-size: 13px;
                 opacity: 0.95;
             }
             
             .info-item {
                 text-align: center;
+                background: rgba(255, 255, 255, 0.15);
+                padding: 12px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
             }
             
             .info-label {
                 display: block;
-                font-size: 12px;
-                opacity: 0.8;
-                margin-bottom: 4px;
+                font-size: 11px;
+                opacity: 0.85;
+                margin-bottom: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
             
             .info-value {
-                font-weight: 600;
-                font-size: 16px;
+                font-weight: 700;
+                font-size: 18px;
             }
             
             .content {
@@ -1947,17 +1962,23 @@ def render_html_content(
             }
             
             .word-group {
-                margin-bottom: 32px;
-                background: #fafbfc;
+                margin-bottom: 28px;
+                background: #ffffff;
                 border-radius: 16px;
-                padding: 20px;
+                padding: 24px;
                 border: 1px solid #e5e7eb;
                 transition: all 0.3s ease;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             }
             
             .word-group:hover {
-                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                transform: translateY(-3px);
+                border-color: #d1d5db;
+            }
+            
+            .word-group:first-of-type {
+                margin-top: 0;
             }
             
             .word-group:first-child {
@@ -1968,42 +1989,58 @@ def render_html_content(
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 16px;
-                padding-bottom: 12px;
-                border-bottom: 2px solid #e5e7eb;
+                margin-bottom: 20px;
+                padding-bottom: 16px;
+                border-bottom: 2px solid #f3f4f6;
             }
             
             .word-info {
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 14px;
+                flex: 1;
             }
             
             .word-name {
-                font-size: 18px;
+                font-size: 20px;
                 font-weight: 700;
-                color: #1a1a1a;
-                letter-spacing: -0.3px;
+                color: #111827;
+                letter-spacing: -0.4px;
+                line-height: 1.2;
             }
             
             .word-count {
                 color: #6b7280;
                 font-size: 13px;
-                font-weight: 600;
-                background: #f3f4f6;
-                padding: 4px 10px;
-                border-radius: 12px;
+                font-weight: 700;
+                background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                padding: 6px 14px;
+                border-radius: 14px;
+                border: 1px solid #d1d5db;
+                white-space: nowrap;
             }
             
             .word-count.hot { 
                 color: #dc2626; 
-                background: #fee2e2;
+                background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+                border-color: #fca5a5;
                 font-weight: 700; 
             }
             .word-count.warm { 
                 color: #ea580c; 
-                background: #fed7aa;
+                background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+                border-color: #fb923c;
                 font-weight: 700; 
+            }
+            
+            .word-index {
+                color: #9ca3af;
+                font-size: 12px;
+                font-weight: 600;
+                background: #f9fafb;
+                padding: 4px 10px;
+                border-radius: 10px;
+                border: 1px solid #e5e7eb;
             }
             
             .word-index {
@@ -2012,22 +2049,23 @@ def render_html_content(
             }
             
             .news-item {
-                margin-bottom: 16px;
-                padding: 18px;
-                background: white;
-                border-radius: 12px;
+                margin-bottom: 14px;
+                padding: 20px;
+                background: #fafbfc;
+                border-radius: 14px;
                 border: 1px solid #e5e7eb;
                 position: relative;
                 display: flex;
-                gap: 14px;
+                gap: 16px;
                 align-items: flex-start;
-                transition: all 0.2s ease;
+                transition: all 0.25s ease;
             }
             
             .news-item:hover {
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                border-color: #d1d5db;
-                transform: translateX(4px);
+                box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+                border-color: #cbd5e1;
+                transform: translateX(6px);
+                background: #ffffff;
             }
             
             .news-item:last-child {
@@ -2140,10 +2178,11 @@ def render_html_content(
             
             .news-title {
                 font-size: 16px;
-                line-height: 1.5;
-                color: #1a1a1a;
+                line-height: 1.6;
+                color: #111827;
                 margin: 0;
                 font-weight: 500;
+                letter-spacing: -0.2px;
             }
             
             .news-link {
@@ -2335,6 +2374,7 @@ def render_html_content(
                     <button class="save-btn" onclick="saveAsMultipleImages()">分段保存</button>
                 </div>
                 <div class="header-title">热点新闻分析</div>
+                <div class="header-subtitle">📊 6小时重要新闻汇总</div>
                 <div class="header-info">
                     <div class="info-item">
                         <span class="info-label">报告类型</span>
